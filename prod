@@ -1,0 +1,4 @@
+VITE_FORMSERVICE_HTTPS_URL=https://formsvc.ipnxnigeria.net/comms
+VITE_FORMSERVICE_HTTP_URL=https://formsvc.ipnxnigeria.net/comms
+#VUE_APP_API_URL= https://api-svc.ipnxnigeria.net/api/v1
+VUE_APP_API_URL= https://adminsalesportal.ipnxnigeria.net/api/v1

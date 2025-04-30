@@ -1,0 +1,167 @@
+stages:
+  - test
+  - analyze
+  - build
+  - push
+  - deploy
+
+
+variables:
+  IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
+  SONAR_URL: $SONAR_URL
+  SONAR_LOGIN: $SONAR_LOGIN
+  SONAR_PASSWORD: $SONAR_PASSWORD
+  PIPELINE_USER: $PIPELINE_USER
+
+
+check-for-secrets:
+  stage: test
+  allow_failure: false 
+  script: 
+    - trufflehog git file://. --since-commit $CI_COMMIT_BRANCH --branch $CI_COMMIT_BRANCH --no-only-verified --fail --no-update
+
+sonarqube-check:
+  stage: analyze
+  image: 
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  
+    GIT_DEPTH: "0"  
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  script: 
+    - bash /opt/sonar-scanner/bin/sonar-scanner
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'main'
+
+
+
+
+#test_code:
+# stage: analyze
+# allow_failure: true
+# after_script:
+#   - docker rmi $CI_COMMIT_SHORT_SHA:test
+# script: 
+#   - docker build -t $CI_COMMIT_SHORT_SHA:test -f testdockerfile . 
+  
+
+build_docker_image:
+  stage: build
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'dev'
+  # - if: $CI_COMMIT_BRANCH == 'main'
+    #- if: $CI_COMMIT_BRANCH == 'staging'
+    #- if: $CI_COMMIT_BRANCH == 'devops'
+  script:
+    - echo "Generated image tag is $IMAGE_TAG"
+    - docker build -t istipnx/ipnxnigeria:salesportal-admin-$CI_COMMIT_SHORT_SHA .
+
+push_dev_docker_image:
+  stage: push
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'dev'
+    #- if: $CI_COMMIT_BRANCH == 'main'
+    #- if: $CI_COMMIT_BRANCH == 'staging' 
+    #- if: $CI_COMMIT_BRANCH == 'devops'
+  before_script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  script:
+    - docker push istipnx/ipnxnigeria:salesportal-admin-$CI_COMMIT_SHORT_SHA
+    - docker rmi istipnx/ipnxnigeria:salesportal-admin-$CI_COMMIT_SHORT_SHA
+
+
+deploy_to_dev:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'dev'
+    #- if: $CI_COMMIT_BRANCH == 'devops'
+  image: ubuntu:22.04
+  environment: dev
+  before_script:
+    - git config --global user.email "pipeline_user@ipnxnigeria.net"
+    - git config --global user.name "pipeline"
+  script:
+    - git remote set-url origin http://${PIPELINE_TOKEN}@10.50.1.110/devops/devops-iac.git
+    - git clone http://pipeline:${PIPELINE_TOKEN}@10.50.1.110/devops/devops-iac.git
+    - cd devops-iac
+    - sed -i 's/salesportal-admin-.*/'salesportal-admin-"$IMAGE_TAG"'/g' projects/sales-portal/adminfrontend/deployment/dev/deployment.yml
+    - cat projects/sales-portal/adminfrontend/deployment/dev/deployment.yml
+    - git add projects/sales-portal/adminfrontend/deployment/dev/deployment.yml
+    - git commit -m "Updated Sales Portal adminfrontend Dev k8s manifest files"
+    - git push
+build_staging_image:
+  stage: build
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'staging'
+  script:
+    - echo "Generated image tag is $IMAGE_TAG"
+    - docker build -t istipnx/ipnxnigeria:salesportal-admin-sta-$CI_COMMIT_SHORT_SHA -f Dockerfile-staging .
+push_staging_image:
+  stage: push
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'staging' 
+  before_script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  script:
+    - docker push istipnx/ipnxnigeria:salesportal-admin-sta-$CI_COMMIT_SHORT_SHA
+    - docker rmi istipnx/ipnxnigeria:salesportal-admin-sta-$CI_COMMIT_SHORT_SHA
+deploy_to_staging:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'staging'
+  environment: staging
+  before_script:
+    - git config --global user.email "pipeline_user@ipnxnigeria.net"
+    - git config --global user.name "pipeline"
+  script:
+    - git remote set-url origin http://${PIPELINE_TOKEN}@10.50.1.110/devops/devops-iac.git
+    - git clone http://pipeline:${PIPELINE_TOKEN}@10.50.1.110/devops/devops-iac.git
+    - cd devops-iac
+    - sed -i 's/salesportal-admin-sta-.*/'salesportal-admin-sta-"$IMAGE_TAG"'/g' projects/sales-portal/adminfrontend/deployment/staging/deployment.yml
+    - cat projects/sales-portal/adminfrontend/deployment/staging/deployment.yml
+    - git add projects/sales-portal/adminfrontend/deployment/staging/deployment.yml
+    - git commit -m "Sales Portal Staging k8s manifest file"
+    - git push
+build_prod_image:
+  stage: build
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'main'
+    #- if: $CI_COMMIT_BRANCH == 'devops'
+  script:
+    - echo "Generated image tag is $IMAGE_TAG"
+    - docker build -t istipnx/ipnxnigeria:salesportal-admin-prod-$CI_COMMIT_SHORT_SHA -f Dockerfile-prod .
+push_prod_image:
+  stage: push
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'main' 
+    #- if: $CI_COMMIT_BRANCH == 'devops'
+  before_script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  script:
+    - docker push istipnx/ipnxnigeria:salesportal-user-prod-$CI_COMMIT_SHORT_SHA
+    - docker rmi istipnx/ipnxnigeria:salesportal-user-prod-$CI_COMMIT_SHORT_SHA
+deploy_to_prod:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'main'
+    #- if: $CI_COMMIT_BRANCH == 'devops'
+  image: ubuntu:22.04
+  when: manual
+  environment: prod
+  before_script:
+    - git config --global user.email "pipeline_user@ipnxnigeria.net"
+    - git config --global user.name "pipeline"
+  script:
+    - git remote set-url origin http://${PIPELINE_TOKEN}@10.50.1.110/devops/devops-iac.git
+    - git clone http://pipeline:${PIPELINE_TOKEN}@10.50.1.110/devops/devops-iac.git
+    - cd devops-iac
+    - sed -i 's/salesportal-admin-prod-.*/'salesportal-admin-prod-"$IMAGE_TAG"'/g' projects/sales-portal/adminfrontend/deployment/prod/deployment.yml
+    - cat projects/sales-portal/adminfrontend/deployment/prod/deployment.yml
+    - git add projects/sales-portal/adminfrontend/deployment/prod/deployment.yml
+    - git commit -m "Sales Portal Staging k8s manifest file"
+    - git push

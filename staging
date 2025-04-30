@@ -1,0 +1,4 @@
+VITE_FORMSERVICE_HTTPS_URL=https://stagingform.ipnxnigeria.net/comms
+VITE_FORMSERVICE_HTTP_URL=https://stagingform.ipnxnigeria.net/comms
+#VUE_APP_API_URL= https://api-svc.ipnxnigeria.net/api/v1
+VUE_APP_API_URL= https://stagingadminsp.ipnxnigeria.net/api/v1

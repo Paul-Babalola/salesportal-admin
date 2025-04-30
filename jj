@@ -1,0 +1,30 @@
+const fetchData = async () => {
+    try {
+      // Attempt to fetch data from API
+      const response = await apiClient.get('/Orders/admin/view-all-customer-orders', {
+        params: {
+          pageNumber: paginationOptions.value.currentPage,
+          pageSize: paginationOptions.value.pageSize
+        }
+      });
+  
+      // Map retrieved data to orders format
+      const orders = response.data.orders.map((order) => ({
+        image: order.image ? `${import.meta.env.VITE_APP_API_BASE_URL}${order.image}` : null,
+        name: order.name,
+        dateOrdered: order.dateOrdered,
+        amount: order.amount,
+        orderId: order.orderId,
+        status: order.status,
+      }));
+  
+      // Update customers ref with fetched data
+      displayCustomerOrders(orders);
+  
+      // Update localStorage with fetched data
+      localStorage.setItem('customerOrders', JSON.stringify(orders));
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+  
