@@ -385,7 +385,7 @@ export default {
   width: 14vw;
   margin-bottom: 2vh;
   background-color: white;
-  border: 1px solid #DC3545;
+  border: 1px solid blue;
   border-radius: 50px;
   height: 5vh;
   cursor: pointer;
@@ -420,7 +420,7 @@ export default {
 
 
 .button:hover {
-  background-color: #DC3545;
+  background-color: blue;
   color: white;
 }
 
@@ -461,7 +461,7 @@ ul {
 }
 
 .my-dropdown .el-dropdown-menu {
-  background-color: #ff2020;
+  background-color: blue;
   border: 1px solid #ccc;
 }
 
@@ -486,7 +486,7 @@ ul {
 }
 
 .el-dropdown-item:hover {
-  background-color: #c91212;
+  background-color: blue;
   /* Background color on hover */
 }
 
@@ -636,7 +636,7 @@ ul {
 .button1 {
   text-decoration: none;
   width: 9vw;
-  background-color: #DA1919;
+  background-color: blue;
   border: 0px solid;
   border-radius: 5px;
   height: 5vh;
@@ -652,14 +652,14 @@ ul {
   width: 14vw;
   margin-bottom: 2vh;
   background-color: white;
-  border: 1px solid #DC3545;
+  border: 1px solid blue;
   border-radius: 50px;
   height: 5vh;
   cursor: pointer;
 }
 
 .button:hover {
-  background-color: #DC3545;
+  background-color: blue;
   color: white;
 }
 
