@@ -44,7 +44,14 @@
                             :increase="increase_week" :total="total_week" />
                     </div>
                     <div class="rowtwo">
-                        <ChartTwoVue class="graph1" />
+                        <ChartTwoVue
+  :chartData="[300, 500, 450, 600, 550, 700, 800]"
+  :chartLabels="['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']"
+  chartTitle="Website Views"
+  chartSubtitle="This Week"
+  gradientColor="linear-gradient(180deg, #5A9EF8 0%, #397AF6 100%)"
+  boxShadowStyle="0px 2px 6px rgba(89, 154, 249, 0.36)"
+/>
                         <ChartOneVue class="graph2" chartId="chart1" :chartData="dailySalesData"
                             :chartLabels="dailySalesLabels" chartTitle="Daily Sales"
                             gradientColor="linear-gradient(180deg, #63B967 0%, #4BA64F 100%)"
@@ -55,7 +62,14 @@
                             :chartIncrease="monthlySalesTrend" boxShadowStyle="0px 2px 6px rgba(0, 0, 0, 0.25)" />
                     </div>
                     <div class="rowthree">
-                        <RowThreeVue />
+                        <RowThreeVue
+  :title="'Top Sales'"
+  :salesData="[
+    { name: 'Paul Babalola', total: 120000, quantity: 12 },
+    { name: 'John Doe', total: 95000, quantity: 9 },
+    { name: 'Nazario Ronaldo', total: 87000, quantity: 8 }
+  ]"
+/>
                     </div>
                     <p>© 2024, Paul Babalola Dev work.</p>
 
@@ -67,187 +81,52 @@
 </template>
 
 <script lang="ts" setup>
-import { ElContainer, ElAside, ElIcon, ElHeader, ElInput, ElRow, ElCol } from 'element-plus';
 import { ref, onMounted } from 'vue';
 import SideBarVue from '@/components/SideBar.vue';
 import ChartOneVue from '@/components/dashboard/ChartOne.vue';
 import ChartTwoVue from '@/components/dashboard/ChartTwo.vue';
 import RowThreeVue from '@/components/dashboard/RowThree.vue';
 import RowOneVue from '@/components/dashboard/RowOne.vue';
-import apiClient from '@/axios.js';
 
-const sinput = ref('')
+const sinput = ref('');
 
-const increase_sme = ref('No data');
-const total_sme = ref('0');
+// Dummy values for cards
+const increase_sme = ref('12% increase');
+const total_sme = ref('320');
 
-const increase_residential = ref('No data');
-const total_residential = ref('0');
+const increase_residential = ref('8% increase');
+const total_residential = ref('180');
 
-const increase_revenue = ref('No data');
-const total_revenue = ref('0');
+const increase_revenue = ref('15% increase');
+const total_revenue = ref('₦4,500,000');
 
-const increase_week = ref('No data');
-const total_week = ref('0');
+const increase_week = ref('10% increase');
+const total_week = ref('500');
 
-const dailySalesData = ref([]);
+// Dummy chart data
+const dailySalesData = ref([150, 200, 180, 220, 300, 250, 270]);
 const dailySalesLabels = ref(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
-const dailySalesTrend = ref('');
-const monthlySalesData = ref([]);
+const dailySalesTrend = ref(' 12% increase');
+
+// Monthly sales dummy data
+const monthlySalesData = ref([1200, 1350, 1100, 1500, 1400, 1550, 1600, 1700, 1800, 2000, 2100, 2200]);
 const monthlySalesLabels = ref(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
-const monthlySalesTrend = ref('');
+const monthlySalesTrend = ref(' 25% increase' );
 
-const fetchSmeSignUpStats = async () => {
-    try {
-        let cachedData = localStorage.getItem('smeSignup');
-        if (cachedData) {
-            const data = JSON.parse(cachedData);
-            displaySmeStats(data);
-        }
+const websiteViewsData = ref([500, 620, 580, 690, 720, 650, 700]);
+const websiteViewsLabels = ref(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
+const websiteViewsTrend = ref('+5.3%');
 
-        const response = await apiClient.get('/AdminDashBoardStats/admin/weekly-sme-signups');
-        const newData = {
-            increase: response.data.trend !== null ? response.data.trend : 'No data',
-            total: response.data.signUpsForTheWeek !== "0" ? response.data.signUpsForTheWeek : '0'
-        };
+const topSalesData = ref([
+  { name: 'Fiber Plan 100Mbps', unitsSold: 120, revenue: '₦360,000' },
+  { name: 'SME Broadband 50Mbps', unitsSold: 95, revenue: '₦285,000' },
+  { name: 'TV Bundle', unitsSold: 78, revenue: '₦234,000' },
+]);
 
-        displaySmeStats(newData);
 
-        localStorage.setItem('smeSignup', JSON.stringify(newData));
-    } catch (error) {
-        console.error('Error fetching SME sign-up stats:', error);
-        displaySmeStats({ increase: 'No data', total: '0' });
-    }
-};
-
-const displaySmeStats = (data) => {
-    increase_sme.value = data.increase;
-    total_sme.value = data.total;
-};
-
-const fetchResidentialSignUpStats = async () => {
-    try {
-        let cachedData = localStorage.getItem('residentialSignup');
-        if (cachedData) {
-            const data = JSON.parse(cachedData);
-            displayResidentialStats(data);
-        }
-
-        const response = await apiClient.get('/AdminDashBoardStats/admin/weekly-residential-signups');
-        const newData = {
-            increase: response.data.trend !== null ? response.data.trend : 'No data',
-            total: response.data.signUpsForTheWeek !== "0" ? response.data.signUpsForTheWeek : '0'
-        };
-
-        displayResidentialStats(newData);
-
-        localStorage.setItem('residentialSignup', JSON.stringify(newData));
-    } catch (error) {
-        console.error('Error fetching residential sign-up stats:', error);
-        displayResidentialStats({ increase: 'No data', total: '0' });
-    }
-};
-
-const displayResidentialStats = (data) => {
-    increase_residential.value = data.increase;
-    total_residential.value = data.total;
-};
-
-const fetchRevenueStats = async () => {
-    try {
-        let cachedData = localStorage.getItem('revenue');
-        if (cachedData) {
-            const data = JSON.parse(cachedData);
-            displayRevenueStats(data);
-        }
-
-        const response = await apiClient.get('/AdminDashBoardStats/admin/monthly-revenue');
-        const newData = {
-            increase: response.data.trend !== null ? response.data.trend : 'No data',
-            total: response.data.revenueForTheMonth !== "0" ? response.data.revenueForTheMonth : '0'
-        };
-
-        displayRevenueStats(newData);
-
-        localStorage.setItem('revenue', JSON.stringify(newData));
-    } catch (error) {
-        console.error('Error fetching revenue stats:', error);
-        displayRevenueStats({ increase: 'No data', total: '0' });
-    }
-};
-
-const displayRevenueStats = (data) => {
-    increase_revenue.value = data.increase;
-    total_revenue.value = data.total;
-};
-
-const fetchWeeklyStats = async () => {
-    try {
-        let cachedData = localStorage.getItem('weeklyStats');
-        if (cachedData) {
-            const data = JSON.parse(cachedData);
-            displayWeeklyStats(data);
-        }
-
-        const response = await apiClient.get('/AdminDashBoardStats/admin/weekly-total-signups');
-        const newData = {
-            increase: response.data.trend !== null ? response.data.trend : 'No data',
-            total: response.data.signUpsForTheWeek !== "0" ? response.data.signUpsForTheWeek : '0'
-        };
-
-        displayWeeklyStats(newData);
-
-        localStorage.setItem('weeklyStats', JSON.stringify(newData));
-    } catch (error) {
-        console.error('Error fetching weekly stats:', error);
-        displayWeeklyStats({ increase: 'No data', total: '0' });
-    }
-};
-
-const displayWeeklyStats = (data) => {
-    increase_week.value = data.increase;
-    total_week.value = data.total;
-};
-
-const fetchDailySalesData = async () => {
-    try {
-        const response = await apiClient.get('/AdminDashBoardStats/admin/daily-sales-for-the-week');
-        const data = response.data.data;
-        dailySalesData.value = Object.values(data);
-        dailySalesTrend.value = response.data.trend;
-    } catch (error) {
-        console.error('Error fetching daily sales data:', error);
-    }
-};
-
-const fetchMonthlySalesData = async () => {
-    try {
-        const response = await apiClient.get('/AdminDashBoardStats/admin/monthly-sales-for-the-year');
-        const data = response.data.data;
-
-        const salesData = Array(12).fill(0);
-
-        Object.entries(data).forEach(([month, value]) => {
-            const monthIndex = monthlySalesLabels.value.findIndex(label => label.startsWith(month.slice(0, 3)));
-            if (monthIndex !== -1) {
-                salesData[monthIndex] = value;
-            }
-        });
-
-        monthlySalesData.value = salesData;
-        monthlySalesTrend.value = response.data.trend;
-    } catch (error) {
-        console.error('Error fetching monthly sales data:', error);
-    }
-};
-
+// No API fetching needed
 onMounted(() => {
-    fetchSmeSignUpStats();
-    fetchResidentialSignUpStats();
-    fetchRevenueStats();
-    fetchWeeklyStats();
-    fetchDailySalesData();
-    fetchMonthlySalesData();
+  console.log('Dashboard mounted with dummy data');
 });
 </script>
 
