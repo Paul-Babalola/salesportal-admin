@@ -17,7 +17,7 @@
           <!-- <div>ssssssssssssssss {{ customer.orderId }}</div> -->
           <div class="cform">
             <template v-if="customer">
-              <h1 style="text-align: center; font-weight: 700; color: #0A1551;">ipNX Retail Service Order Form</h1>
+              <h1 style="text-align: center; font-weight: 700; color: #0A1551;">Retail Service Order Form</h1>
               <hr style="width:70vw; margin: 0vh 5vw; transform: scaleY(0.1);">
               <div style="margin: 0vh 5vw;">
                 <el-row :gutter="20">
@@ -131,7 +131,7 @@
                   </el-col>
                 </el-row>
                 <el-row :gutter="20">
-                  <el-col :span="7" id="leftside">Who referred you to ipNX</el-col>
+                  <el-col :span="7" id="leftside">Who referred you here?</el-col>
                   <el-col :span="7" id="rightside">
                     <template v-if="customer.whoReferredYou">
                       {{ customer.whoReferredYou }}
@@ -316,7 +316,7 @@
         </el-main>
 
         <el-footer style="height: 4vh;">
-          <p>© 2022, ipNX Nigeria Limited.</p>
+          <p>© 2024, Paul Babalola Dev work.</p>
         </el-footer>
       </el-container>
     </el-container>
@@ -324,21 +324,14 @@
 </template>
 
 <script lang="ts" setup>
-import { ElContainer, ElAside, ElIcon, ElHeader, ElInput, ElRow, ElCol, buildLocaleContext, ElLoading } from 'element-plus'
+import { ElContainer, ElAside, ElIcon, ElHeader, ElInput, ElRow, ElCol } from 'element-plus';
 import { ref, onMounted, computed } from 'vue';
-import apiClient from '@/axios.js';
 import SideBarVue from '@/components/SideBar.vue';
-import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
 import html2pdf from 'html2pdf.js';
 
-
-const router = useRouter();
-
-name: 'CustomerDetails'
-
 interface Customer {
-  orderReferenceNumber: string; //not name in endpoint
+  orderReferenceNumber: string;
   paymentReferenceNumber: string;
   orderDateAndTime: string;
   customerType: string;
@@ -370,163 +363,87 @@ interface Customer {
   typeOfBusiness: string;
   addressOfBusiness: string;
 }
-const customer = ref<Customer[]>([]);
-const loadingInstance = ref(null)
+
+const customer = ref<Customer>({
+  orderReferenceNumber: 'ORD123456',
+  paymentReferenceNumber: 'PAY987654',
+  orderDateAndTime: '2025-01-15T12:34:56Z',
+  customerType: 'Residential',
+  planName: 'Unlimited 50Mbps',
+  termsAndConditions: 'Agreed',
+  planTypeName: 'Fiber',
+  price: '₦25,000',
+  planModemAndInstallationAmount: '₦15,000',
+  months: '12',
+  whoReferredYou: 'Friend',
+  salesAgentName: 'John Doe',
+  customerName: 'Jane Smith',
+  gender: 'Female',
+  dateOfBirth: '1990-04-25',
+  formattedDateOrdered: '25/04/1990',
+  occupation: 'Engineer',
+  email: 'jane.smith@example.com',
+  phoneNumber: '08012345678',
+  address: '123 Lekki Phase 1, Lagos',
+  typeOfBuilding: 'Duplex',
+  billingInformation: 'Monthly billing',
+  photograph: '/dummy/path/photo.jpg',
+  governmentID: '/dummy/path/id.jpg',
+  utilityBill: '/dummy/path/utility.jpg',
+  personalDataConsent: 'Yes',
+  privacyPolicy: 'Accepted',
+  certificateOfIncorporation: null,
+  letterOfIntroduction: null,
+  typeOfBusiness: 'N/A',
+  addressOfBusiness: 'N/A'
+});
 
 const formatDate = (value: string | undefined) => {
   if (!value) return 'Nil';
   const date = new Date(value);
   return date.toLocaleDateString(); 
- };
-
-const fetchData = async (orderId: string) => {
-  try {
-    loadingInstance.value = ElLoading.service({ text: 'Loading...' });
-    const response = await apiClient.get(`/Orders/admin/view-customer-order/${orderId}`);
-    customer.value = response.data;
-  } catch (error) {
-    console.error('Error fetching data:', error);
-  } finally {
-      loadingInstance.value.close();
-     }
 };
-onMounted(() => {
-  const route = useRoute();
-  const orderId = route.params.orderId as string;
-
-  if (orderId) {
-    fetchData(orderId);
-  } else {
-    console.error('Order ID is not provided in the route parameters.');
-  }
-});
-
 
 const customerID = computed(() => {
-  if (customer.value.governmentID) {
-    return `${import.meta.env.VITE_APP_API_BASE_URL}${customer.value.governmentID}`;
-  } else {
-    return 'No ID';
-  }
+  return customer.value.governmentID
+    ? `${customer.value.governmentID}`
+    : 'No ID';
 });
 const customerPhotograph = computed(() => {
-  if (customer.value.photograph) {
-    return `${import.meta.env.VITE_APP_API_BASE_URL}${customer.value.photograph}`;
-  } else {
-    return 'No Photograph';
-  }
+  return customer.value.photograph
+    ? `${customer.value.photograph}`
+    : 'No Photograph';
 });
 const customerUtility = computed(() => {
-  if (customer.value.utilityBill) {
-    return `${import.meta.env.VITE_APP_API_BASE_URL}${customer.value.utilityBill}`;
-  } else {
-    return 'No Bill';
-  }
+  return customer.value.utilityBill
+    ? `${customer.value.utilityBill}`
+    : 'No Bill';
 });
 
 const downloadForm = () => {
-  if (!customer.value) {
-    console.error('Customer data is not available');
-    return;
-  }
-  const photograph = `${import.meta.env.VITE_APP_API_BASE_URL}${customer.value.photograph}`;
-  const identification = `${import.meta.env.VITE_APP_API_BASE_URL}${customer.value.governmentID}`;
-  const utilityBill = `${import.meta.env.VITE_APP_API_BASE_URL}${customer.value.utilityBill}`;
+  const photograph = customerPhotograph.value;
+  const identification = customerID.value;
+  const utilityBill = customerUtility.value;
 
   const structuredHtml = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Service Order Form: ${customer.value.name}</title>
-        
-          <style>
-          .main{
-            margin: 0vh 3vw;
-            background-color:white;
-          }
-          .cform {
-            max-width: 600px;
-            margin: 0vh 3vw;
-          }
-          .row {
-            margin-bottom: 20px; 
-            color:#2C2762; /*dark blue*/
-          }
-          #bg{
-            background-color: lightblue;
-            text-align: center;
-            display: inline-block;
-            padding: 0vh 1vw;
-            margin-right: 10px;
-          }
-          .row strong {
-            display: inline-block;
-            width: 200px; 
-            margin-right: 40px;
-            color:#6F9ED2;
-          }
-          #upload{
-            text-decoration: underline;
-            color: #2C2762;
-            cursor: pointer;
-          }
-          </style>
-        </head>
-        <body>
-        <div style="background-color: lightgray; ">
-          <img src="/src/assets/ipNX_Logo.png" alt="" style="margin: 0vh 25vw">
-          <div class="main">
-            <div style="background-color:red; width:54.2vw; height:3vh"></div>
-            <h1 style="text-align: center; color: black">Service Order Form: ${customer.value.customerName}</h1>
-            <hr style="width:45vw; margin: 3vh 5vw; transform: scaleY(0.1);">
-            <div class="cform" style="color:black">
-              <div class="row"><strong>Order Reference Number:  </strong>${customer.value.orderReferenceNumber}</div>
-              <div class="row"><strong>What type of internet plan are you looking for?:  </strong>${customer.value.customerType}</div>
-              <div class="row"><strong>Terms and Conditions:  </strong><div id="bg">${customer.value.termsAndConditions}</div>
-              <div class="row"><strong>Please choose an internet plan:  </strong><div id="bg">${customer.value.planName}</div></div>
-              <div class="row"><strong>Price:  </strong>${customer.value.price}</div>
-              <div class="row"><strong>Internet Plan + Modem & Installation:  </strong>${customer.value.planModemAndInstallationAmount}</div>
-              <div class="row"><strong>Number of Month(s):  </strong><div id="bg">${customer.value.months}</div></div>
-              <!-- <div class="row"><strong>Amount to Pay:  </strong>${customer.value.price}</div> -->
-              <div class="row"><strong>Please choose an internet plan:  </strong><div id="bg">${customer.value.planTypeName}</div></div>
-              <div class="row"><strong>Choose number of months:  </strong><div id="bg">${customer.value.months}</div></div>
-              <div class="row"><strong>Who referred you to ipNX?:  </strong><div id="bg">${customer.value.whoReferredYou}</div></div>
-              <div class="row"><strong>Sales Agent</strong><div id="bg">${customer.value.salesAgentName}</div></div>
-              <div class="row"><strong>Name:  </strong>${customer.value.customerName}</div>
-              <div class="row"><strong>Gender:  </strong>${customer.value.gender}</div>
-              <div class="row"><strong>Date of Birth:  </strong>${customer.value.dateOfBirth}</div>
-              <div class="row"><strong>Occupation:  </strong>${customer.value.occupation}</div>
-              <div class="row"><strong>E-mail:  </strong>${customer.value.email}</div>
-              <div class="row"><strong>Mobile Phone:  </strong>${customer.value.phoneNumber}</div>
-              <div class="row"><strong>Address:  </strong>${customer.value.address}</div>
-              <div class="row"><strong>Type of building:  </strong>${customer.value.typeOfBuilding}</div>
-              <div class="row"><strong>Billing Information:  </strong>${customer.value.billingInformation}</div>
-              <div class="row"><strong>Upload Passport Photograph:  </strong><a href="${photograph}" target="_blank" id="upload">View Photograph</a></div>
-              <div class="row"><strong>Upload Personal Identification:  </strong><a href="${identification}" target="_blank" id="upload">View ID</a></div>
-              <div class="row"><strong>Upload Utility Bill:  </strong><a href="${utilityBill}" target="_blank" id="upload">View Utility Bill</a></div> 
-              <div class="row"><strong>Personal Data Processing Consent:  </strong><div id="bg">${customer.value.personalDataConsent}</div></div>
-              <div class="row" style="  margin-bottom: 5vh;"><strong>Data Privacy Policy:  </strong><div id="bg">${customer.value.privacyPolicy}</div></div>
-              <div><br><br></div>
-            </div>
-          </div>
-        </div>
-        
-        </body>
-      </html>
-    `;
-  html2pdf()
-    .from(structuredHtml)
-    .toPdf()
-    .get('pdf')
-    .then(function (pdf) {
-      const fileName = `ServiceOrderForm_${customer.value.customerName}.pdf`;
-      pdf.save(fileName);
-    });
-}
+    <!DOCTYPE html>
+    <html lang="en">
+    <head><meta charset="UTF-8"><title>Service Order Form</title></head>
+    <body>
+      <h1>Service Order Form: ${customer.value.customerName}</h1>
+      <p><strong>Order Ref:</strong> ${customer.value.orderReferenceNumber}</p>
+      <p><strong>Plan:</strong> ${customer.value.planName}</p>
+      <p><strong>Photograph:</strong> <a href="${photograph}" target="_blank">View</a></p>
+      <p><strong>ID:</strong> <a href="${identification}" target="_blank">View</a></p>
+      <p><strong>Utility Bill:</strong> <a href="${utilityBill}" target="_blank">View</a></p>
+    </body>
+    </html>
+  `;
 
-
+  html2pdf().from(structuredHtml).toPdf().get('pdf').then(pdf => {
+    pdf.save(`ServiceOrderForm_${customer.value.customerName}.pdf`);
+  });
+};
 
 </script>
 

@@ -106,7 +106,7 @@
 import { ElContainer, ElAside, ElIcon, ElHeader, ElInput, ElRow, ElCol, ElLoading, ElMessage } from 'element-plus'
 import { ref, watchEffect, computed, onMounted } from 'vue';
 import SideBarVue from '@/components/SideBar.vue';
-import apiClient from '@/axios.js';
+// import apiClient from '@/axios.js';
 import { useRouter } from 'vue-router';
 import html2pdf from 'html2pdf.js';
 
@@ -206,40 +206,81 @@ const loadingInstance = ref(null)
 const fetchData = async () => {
   try {
     loadingInstance.value = ElLoading.service({ text: 'Loading...' });
-    const response = await apiClient.get('/Orders/admin/view-all-customer-orders', {
-      params: {
-        pageNumber: paginationOptions.value.currentPage,
-        pageSize: paginationOptions.value.pageSize
-      }
-    });
 
-    paginationOptions.value.total = response.data.metadata.totalCount;
-    const orders = response.data.orders.map(order => ({
-      image: order.image ? `${import.meta.env.VITE_APP_API_BASE_URL}${order.image}` : null,
-      name: order.name,
-      dateOrdered: order.dateOrdered,
-      formattedDateOrdered: order.formattedDateOrdered,
-      amount: order.amount,
-      orderId: order.orderId,
-      status: order.status,
-      whoReferredYou: order.whoReferredYou,
-    }));
-    customers.value = orders;
-    displayedCustomers.value = orders;
+    // Dummy customer data
+    const dummyOrders: customer[] = [
+      {
+        image: null,
+        name: 'John Doe',
+        dateOrdered: '2024-10-10',
+        formattedDateOrdered: 'Oct 10, 2024',
+        amount: '₦25,000',
+        orderId: 'ORD12345',
+        status: 'Successful',
+        whoReferredYou: 'Agent Mike'
+      },
+      {
+        image: null,
+        name: 'Jane Smith',
+        dateOrdered: '2024-10-12',
+        formattedDateOrdered: 'Oct 12, 2024',
+        amount: '₦30,000',
+        orderId: 'ORD12346',
+        status: 'Failed',
+        whoReferredYou: 'Agent Lisa'
+      }
+    ];
+
+    customers.value = dummyOrders;
+    displayedCustomers.value = dummyOrders;
+    paginationOptions.value.total = dummyOrders.length;
+
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error('Error loading dummy data:', error);
   } finally {
-    loadingInstance.value.close();
+    loadingInstance.value?.close();
   }
 };
 
 
 const fetchDetails = async (orderId: string) => {
   try {
-    const response = await apiClient.get(`/Orders/admin/view-customer-order/${orderId}`);
-    details.value = response.data;
+    // Dummy detail data (based on your Details interface)
+    details.value = {
+      orderReferenceNumber: 'ORD12345',
+      paymentReferenceNumber: 'PAY56789',
+      orderDateAndTime: '2024-10-10 10:00 AM',
+      customerType: 'Home User',
+      planName: 'Superfast Fiber 100Mbps',
+      termsAndConditions: 'Accepted',
+      planTypeName: 'Fiber',
+      price: '₦20000',
+      planModemAndInstallationAmount: '₦5000',
+      months: '12',
+      whoReferredYou: 'Agent Mike',
+      salesAgentName: 'Mike Obi',
+      customerName: 'John Doe',
+      gender: 'Male',
+      dateOfBirth: '1990-01-01',
+      formattedDateOrdered: 'Oct 10, 2024',
+      occupation: 'Engineer',
+      email: 'john.doe@example.com',
+      phoneNumber: '08012345678',
+      address: '123 Main Street, Lagos',
+      typeOfBuilding: 'Duplex',
+      billingInformation: 'Same as address',
+      photograph: null,
+      governmentID: null,
+      utilityBill: null,
+      personalDataConsent: 'Yes',
+      privacyPolicy: 'Yes',
+      certificateOfIncorporation: null,
+      letterOfIntroduction: null,
+      typeOfBusiness: 'Individual',
+      addressOfBusiness: '123 Business St.'
+    };
   } catch (error) {
-    console.error('Error fetching details:', error);
+    console.error('Error loading dummy details:', error);
   }
 };
 
@@ -409,7 +450,6 @@ const downloadForm = async (orderId: string) => {
         </head>
         <body>
         <div style="background-color: lightgray; ">
-          <img src="/src/assets/ipNX_Logo.png" alt="" style="margin: 0vh 25vw">
           <div class="main">
             <div style="background-color:red; width:54.2vw; height:3vh"></div>
             <h1 style="text-align: center; color:black">Service Order Form: ${user.customerName}</h1>
@@ -425,7 +465,7 @@ const downloadForm = async (orderId: string) => {
               <!-- <div class="row"><strong>Amount to Pay:  </strong>${user.price}</div> -->
               <div class="row"><strong>Please choose an internet plan:  </strong><div id="bg">${user.planTypeName}</div></div>
               <div class="row"><strong>Choose number of months:  </strong><div id="bg">${user.months}</div></div>
-              <div class="row"><strong>Who referred you to ipNX?:  </strong><div id="bg">${user.whoReferredYou}</div></div>
+              <div class="row"><strong>Who referred you here?:  </strong><div id="bg">${user.whoReferredYou}</div></div>
               <div class="row"><strong>Sales Agent</strong><div id="bg">${user.salesAgentName}</div></div>
               <div class="row"><strong>Name:  </strong>${user.customerName}</div>
               <div class="row"><strong>Gender:  </strong>${user.gender}</div>
@@ -510,7 +550,6 @@ const downloadReceipt = async (orderId: string) => {
       </head>
       <body>
       <div style="background-color: white; ">
-        <img src="/src/assets/ipNX_Logo.png" alt="" style="margin: 0vh 45vw">
         <div class="main">
           <h1 style="text-align: center; color: black">RECEIPT</h1>
           <div class="cform" style="color:black">
@@ -606,7 +645,6 @@ const sendReceiptByEmail = async (orderId) => {
       </head>
       <body>
       <div style="background-color: white; ">
-        <img src="/src/assets/ipNX_Logo.png" alt="" style="margin: 0vh 45vw">
         <div class="main">
           <h1 style="text-align: center;">RECEIPT</h1>
           <div class="cform">
